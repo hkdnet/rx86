@@ -93,7 +93,7 @@ impl Emulator {
         if let Some(val) = self.memory.get(idx) {
             Ok(*val)
         } else {
-            Err(format!("failed to load 32 bit value from {}", idx))
+            Err(format!("failed to load 8 bit value from {}", idx))
         }
     }
 
@@ -102,7 +102,7 @@ impl Emulator {
         if let Some(val) = self.memory.get(idx) {
             Ok(*val as i8)
         } else {
-            Err(format!("failed to load 32 bit value from {}", idx))
+            Err(format!("failed to load 8 bit value from {}", idx))
         }
     }
 
