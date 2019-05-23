@@ -70,6 +70,7 @@ impl Emulator {
                         let diff = self.fetch_signed_8(1).expect("failed to fetch signed 8");
                         self.eip += 2;
                         let abs = diff.abs() as u32;
+                        // TODO: overflow?
                         if diff >= 0 {
                             self.eip += abs;
                         } else {
