@@ -67,8 +67,15 @@ impl Emulator {
                         Err(e) => return Err(e),
                     },
                     Instruction::ShortJump => {
-                        println!("short jump");
-                        self.eip += 1;
+                        let diff = self.fetch_signed_8(1).expect("failed to fetch signed 8");
+                        self.eip += 2;
+                        let abs = diff.abs() as u32;
+                        if diff >= 0 {
+                            self.eip += abs;
+                        } else {
+                            self.eip -= abs;
+                        }
+                        println!("short jump to {}", self.eip);
                     }
                     Instruction::NotImplemented => return Err(format!("NotImplemented: {}", b)),
                 }
@@ -84,6 +91,15 @@ impl Emulator {
         let idx = self.eip as usize + offset;
         if let Some(val) = self.memory.get(idx) {
             Ok(*val)
+        } else {
+            Err(format!("failed to load 32 bit value from {}", idx))
+        }
+    }
+
+    fn fetch_signed_8(self: &Self, offset: usize) -> Result<i8, String> {
+        let idx = self.eip as usize + offset;
+        if let Some(val) = self.memory.get(idx) {
+            Ok(*val as i8)
         } else {
             Err(format!("failed to load 32 bit value from {}", idx))
         }
