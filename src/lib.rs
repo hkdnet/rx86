@@ -132,7 +132,8 @@ impl Emulator {
     pub fn show_registers(self: &Self) {
         let names = vec!["EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"];
         for i in 0..REGISTER_SIZE {
-            println!("{}: {}", names[i], self.registers[i]);
+            let v = self.registers[i];
+            println!("{}: {:>#06x} = {}", names[i], v, v);
         }
     }
 }
