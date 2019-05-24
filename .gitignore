@@ -2,4 +2,7 @@
 **/*.rs.bk
 codes/*.b
 
+/bin
+*.o
+
 tolset_p86
