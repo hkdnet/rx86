@@ -2,6 +2,8 @@ use std::fmt::Formatter;
 
 const REGISTER_SIZE: usize = 8;
 
+type Result<T> = std::result::Result<T, String>;
+
 enum Instruction {
     MovR32Imm32(usize),
     ShortJump,
@@ -40,7 +42,8 @@ impl Emulator {
             eip: 0,
         }
     }
-    pub fn load(self: &mut Self, codes: Vec<u8>) -> Result<(), String> {
+
+    pub fn load(self: &mut Self, codes: Vec<u8>) -> Result<()> {
         if codes.len() > self.memory_capacity {
             Err(format!(
                 "code size {} is larger than memory capacity {}",
@@ -53,32 +56,34 @@ impl Emulator {
         }
     }
 
-    pub fn run(self: &mut Self) -> Result<(), String> {
+    pub fn run(self: &mut Self) -> Result<()> {
         while (self.eip as usize) < self.memory.len() {
-            if let Some(b) = self.memory.get(self.eip as usize) {
-                match Instruction::from(*b) {
-                    Instruction::MovR32Imm32(idx) => match self.fetch_32(1) {
-                        Ok(v) => {
-                            self.registers[idx] = v;
-                            self.eip += 5
-                        }
-                        Err(e) => return Err(e),
-                    },
-                    Instruction::ShortJump => {
-                        let diff = self.fetch_signed_8(1).expect("failed to fetch signed 8");
-                        self.eip += 2;
-                        let abs = diff.abs() as u32;
-                        // TODO: overflow?
-                        if diff >= 0 {
-                            self.eip += abs;
-                        } else {
-                            self.eip -= abs;
-                        }
-                        println!("short jump to {}", self.eip);
+            let insn = self.current_instruction()?;
+            match insn {
+                Instruction::MovR32Imm32(idx) => match self.fetch_32(1) {
+                    Ok(v) => {
+                        self.registers[idx] = v;
+                        self.eip += 5
                     }
-                    Instruction::NotImplemented => return Err(format!("NotImplemented: {}", b)),
+                    Err(e) => return Err(e),
+                },
+                Instruction::ShortJump => {
+                    let diff = self.fetch_signed_8(1)?;
+                    self.eip += 2;
+                    let abs = diff.abs() as u32;
+                    // TODO: overflow?
+                    if diff >= 0 {
+                        self.eip += abs;
+                    } else {
+                        self.eip -= abs;
+                    }
+                    println!("short jump to {}", self.eip);
                 }
-            } else {
+                Instruction::NotImplemented => {
+                    return Err(format!("NotImplemented at {}", self.eip))
+                }
+            }
+            if self.eip == 0 {
                 println!("end of program");
                 break;
             }
@@ -86,7 +91,14 @@ impl Emulator {
         Ok(())
     }
 
-    fn fetch_8(self: &Self, offset: usize) -> Result<u8, String> {
+    fn current_instruction(self: &Self) -> Result<Instruction> {
+        match self.memory.get(self.eip as usize) {
+            Some(&b) => Ok(Instruction::from(b)),
+            None => Err(format!("no instruction at {}", self.eip)),
+        }
+    }
+
+    fn fetch_8(self: &Self, offset: usize) -> Result<u8> {
         let idx = self.eip as usize + offset;
         if let Some(val) = self.memory.get(idx) {
             Ok(*val)
@@ -95,7 +107,7 @@ impl Emulator {
         }
     }
 
-    fn fetch_signed_8(self: &Self, offset: usize) -> Result<i8, String> {
+    fn fetch_signed_8(self: &Self, offset: usize) -> Result<i8> {
         let idx = self.eip as usize + offset;
         if let Some(val) = self.memory.get(idx) {
             Ok(*val as i8)
@@ -104,17 +116,12 @@ impl Emulator {
         }
     }
 
-    fn fetch_32(self: &Self, offset: usize) -> Result<u32, String> {
+    fn fetch_32(self: &Self, offset: usize) -> Result<u32> {
         let mut val = 0_u32;
         for i in 0..4 {
-            match self.fetch_8(offset + i) {
-                Ok(v) => {
-                    let mut v32 = v as u32;
-                    v32 <<= i * 8;
-                    val |= v32;
-                }
-                Err(e) => return Err(e),
-            }
+            let mut v = self.fetch_8(offset + i)? as u32;
+            v <<= i * 8;
+            val |= v;
         }
         Ok(val)
     }
@@ -127,7 +134,7 @@ impl Emulator {
 }
 
 impl std::fmt::Display for Emulator {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+    fn fmt(&self, f: &mut Formatter) -> std::result::Result<(), std::fmt::Error> {
         f.write_str(format!("<Emulator code_size={}>", self.memory.len()).as_str())
     }
 }
