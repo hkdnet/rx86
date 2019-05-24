@@ -131,3 +131,17 @@ impl std::fmt::Display for Emulator {
         f.write_str(format!("<Emulator code_size={}>", self.memory.len()).as_str())
     }
 }
+#[cfg(test)]
+mod tests {
+    use crate::Emulator;
+
+    #[test]
+    fn test_fetch_32() {
+        let mut emulator = Emulator::new();
+        emulator
+            .load(vec![0x78, 0x56, 0x34, 0x12]) // LE
+            .expect("failed to load");
+        let res = emulator.fetch_32(0);
+        assert_eq!(res, Ok(0x12345678))
+    }
+}
