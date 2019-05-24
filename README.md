@@ -26,12 +26,12 @@ EIP=0: MovR32Imm32(0)
 EIP=5: ShortJump
 short jump to 0
 end of program
-EAX: 0x0029 = 41
-ECX: 0x0000 = 0
-EDX: 0x0000 = 0
-EBX: 0x0000 = 0
-ESP: 0x0000 = 0
-EBP: 0x0000 = 0
-ESI: 0x0000 = 0
-EDI: 0x0000 = 0
+EAX: 0x00000029 =         41
+ECX: 0x00000000 =          0
+EDX: 0x00000000 =          0
+EBX: 0x00000000 =          0
+ESP: 0x00000000 =          0
+EBP: 0x00000000 =          0
+ESI: 0x00000000 =          0
+EDI: 0x00000000 =          0
 ```

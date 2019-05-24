@@ -133,7 +133,7 @@ impl Emulator {
         let names = vec!["EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"];
         for i in 0..REGISTER_SIZE {
             let v = self.registers[i];
-            println!("{}: {:>#06x} = {}", names[i], v, v);
+            println!("{}: {:>#010x} = {:#10}", names[i], v, v);
         }
     }
 }
