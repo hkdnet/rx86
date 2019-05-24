@@ -25,6 +25,7 @@ impl From<u8> for Instruction {
 #[derive(Debug)]
 pub struct Emulator {
     // TODO: use array?
+    // EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
     registers: [u32; REGISTER_SIZE],
     eflags: u32,
     memory: Vec<u8>,
