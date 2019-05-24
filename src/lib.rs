@@ -4,6 +4,7 @@ const REGISTER_SIZE: usize = 8;
 
 type Result<T> = std::result::Result<T, String>;
 
+#[derive(Debug)]
 enum Instruction {
     MovR32Imm32(usize),
     ShortJump,
@@ -60,6 +61,7 @@ impl Emulator {
     pub fn run(self: &mut Self) -> Result<()> {
         while (self.eip as usize) < self.memory.len() {
             let insn = self.current_instruction()?;
+            println!("EIP={}: {:?}", self.eip, insn);
             match insn {
                 Instruction::MovR32Imm32(idx) => match self.fetch_32(1) {
                     Ok(v) => {
