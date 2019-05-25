@@ -7,6 +7,7 @@ type Result<T> = std::result::Result<T, String>;
 #[derive(Debug)]
 enum Instruction {
     MovR32Imm32(usize),
+    NearJump,
     ShortJump,
     NotImplemented,
 }
@@ -17,6 +18,7 @@ impl From<u8> for Instruction {
             return Instruction::MovR32Imm32((b - 0xb8) as usize);
         }
         match b {
+            0xe9 => Instruction::NearJump,
             0xeb => Instruction::ShortJump,
             _ => Instruction::NotImplemented,
         }
@@ -70,6 +72,18 @@ impl Emulator {
                     }
                     Err(e) => return Err(e),
                 },
+                Instruction::NearJump => {
+                    let diff = self.fetch_signed_32(1)?;
+                    self.eip += 5;
+                    let abs = diff.abs() as u32;
+                    println!("eip: {}, diff: {}, abs: {}", self.eip, diff, abs);
+                    // TODO: overflow?
+                    if diff >= 0 {
+                        self.eip += abs;
+                    } else {
+                        self.eip -= abs;
+                    }
+                }
                 Instruction::ShortJump => {
                     let diff = self.fetch_signed_8(1)?;
                     self.eip += 2;
@@ -129,6 +143,16 @@ impl Emulator {
         Ok(val)
     }
 
+    fn fetch_signed_32(self: &Self, offset: usize) -> Result<i32> {
+        let mut val = 0_i32;
+        for i in 0..4 {
+            let mut v = self.fetch_8(offset + i)? as i32;
+            v <<= i * 8;
+            val |= v;
+        }
+        Ok(val)
+    }
+
     pub fn show_registers(self: &Self) {
         let names = vec!["EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI"];
         for i in 0..REGISTER_SIZE {
@@ -155,5 +179,16 @@ mod tests {
             .expect("failed to load");
         let res = emulator.fetch_32(0);
         assert_eq!(res, Ok(0x12345678))
+    }
+
+    #[test]
+    fn test_fetch_signed_32() {
+        let mut emulator = Emulator::new(0);
+        emulator
+            .load(vec![0xf6, 0x83, 0xff, 0xff]) // LE
+            .expect("failed to load");
+        let res = emulator.fetch_signed_32(0);
+        let expect = -0x7c0a;
+        assert_eq!(res, Ok(expect))
     }
 }
