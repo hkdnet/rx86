@@ -5,9 +5,15 @@ use std::fs::read;
 fn main() {
     if let Some(filename) = args().nth(1) {
         match read(filename.clone()) {
-            Ok(codes) => {
-                let mut emulator = Emulator::new();
-                emulator.load(codes).unwrap();
+            Ok(mut codes) => {
+                let offset = 0x7c00;
+                let mut emulator = Emulator::new(offset);
+                let mut aligned = Vec::new();
+                for _ in 0..offset {
+                    aligned.push(0)
+                }
+                aligned.append(&mut codes);
+                emulator.load(aligned).unwrap();
                 println!("{}", emulator);
                 println!("start emulation...");
                 if let Err(e) = emulator.run() {

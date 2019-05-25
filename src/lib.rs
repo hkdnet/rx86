@@ -37,13 +37,13 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn new() -> Emulator {
+    pub fn new(eip: u32) -> Emulator {
         Emulator {
             registers: [0, 0, 0, 0, 0, 0, 0, 0],
             eflags: 0,
             memory: Vec::new(),
-            memory_capacity: 1024,
-            eip: 0,
+            memory_capacity: 32678,
+            eip,
         }
     }
 
@@ -97,7 +97,7 @@ impl Emulator {
                     println!("short jump to {}", self.eip);
                 }
                 Instruction::NotImplemented => {
-                    return Err(format!("NotImplemented at {}", self.eip))
+                    return Err(format!("NotImplemented at {}", self.eip));
                 }
             }
             if self.eip == 0 {
@@ -167,13 +167,14 @@ impl std::fmt::Display for Emulator {
         f.write_str(format!("<Emulator code_size={}>", self.memory.len()).as_str())
     }
 }
+
 #[cfg(test)]
 mod tests {
     use crate::Emulator;
 
     #[test]
     fn test_fetch_32() {
-        let mut emulator = Emulator::new();
+        let mut emulator = Emulator::new(0);
         emulator
             .load(vec![0x78, 0x56, 0x34, 0x12]) // LE
             .expect("failed to load");
